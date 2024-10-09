@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <style>
+        body {
+            background: linear-gradient(to right, #7fd2fc, #1daff9);
+            background-size: 200% 200%;
+            animation: gradient 15s ease infinite;
+            color: #333; /* Dark text color for better contrast */
+            overflow: hidden;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 30px;
+            margin-top: 50px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            background-color: rgba(255, 255, 255, 0.8); /* Added a light background for better contrast */
+        }
+
+        h2 {
+            color: #1a1a1a; /* Darker title for better readability */
+            text-align: center; /* Center the heading */
+        }
+
+        h4 {
+            text-align: center; /* Center the subheading */
+        }
+
+        .table-container {
+            max-height: 400px; /* Set maximum height for the table */
+            overflow-y: auto; /* Enable vertical scrolling */
+            margin: 0 auto; /* Center the table container */
+        }
+
+        .table {
+            background-color: rgba(255, 255, 255, 0.9); /* Slightly more opaque for better readability */
+            color: #1a1a1a; /* Dark text color for better contrast */
+            border-collapse: collapse; /* Ensures table borders are neatly rendered */
+            width: 100%; /* Make the table full-width */
+        }
+
+        .table th, .table td {
+            padding: 15px;
+            text-align: center; /* Centered text for better alignment */
+        }
+
+        .table th {
+            background-color: #007bff; /* Bootstrap primary color for table header */
+            color: #ffffff; /* White text for header */
+        }
+
+        .table tr:nth-child(even) {
+            background-color: rgba(204, 204, 204, 0.3); /* Light gray for even rows */
+        }
+
+        .table tr:nth-child(odd) {
+            background-color: rgba(255, 255, 255, 0.3); /* Slightly white for odd rows */
+        }
+
+        .btn-danger {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-danger:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .alert {
+            transition: opacity 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>License Management Dashboard</h2>
+        <h4 class="mt-5">All Licenses</h4>
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>License Key</th>
+                        <th>Status</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="licenseTableBody">
+                    <!-- License keys will be populated here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        <div id="revokeMessage" class="mt-3"></div>
+    </div>
+
+    <script>
+        // Function to load all licenses and display them in the table
+        function loadLicenses() {
+            fetch('/admin/get_licenses')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.getElementById('licenseTableBody');
+                tableBody.innerHTML = '';  // Clear any existing rows
+                
+                data.licenses.forEach(license => {
+                    const row = document.createElement('tr');
+                    
+                    // Create columns for each piece of data
+                    row.innerHTML = `
+                        <td>${license.key}</td>
+                        <td>${license.status}</td>
+                        <td>${new Date(license.start_date).toLocaleDateString()}</td>
+                        <td>${new Date(license.end_date).toLocaleDateString()}</td>
+                        <td><button class="btn btn-danger btn-sm" onclick="revokeLicense('${license.key}')">Revoke</button></td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            });
+        }
+
+        // Function to revoke a license
+        function revokeLicense(licenseKey) {
+            fetch('/admin/revoke_license', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ key: licenseKey })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('revokeMessage').innerHTML = 
+                    `<div class="alert alert-success">${data.message}</div>`;
+                loadLicenses();  // Reload the license table
+            })
+            .catch(error => {
+                document.getElementById('revokeMessage').innerHTML = 
+                    `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            });
+        }
+
+        // Load all licenses when the page loads
+        window.onload = function() {
+            loadLicenses();
+        };
+    </script>
+</body>
+</html>
