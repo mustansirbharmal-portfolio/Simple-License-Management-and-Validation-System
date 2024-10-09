@@ -40,7 +40,6 @@
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
-          
         }
 
         h2 {
@@ -118,10 +117,19 @@
                 return response.json();
             })
             .then(data => {
+                // Display the success message from the server
                 document.getElementById('responseMessage').innerHTML = 
                     `<div class="alert alert-success fade show">${data.message}</div>`;
+
+                // Store the license key in local storage
+                localStorage.setItem('licenseKey', licenseKey);
+
+                // Display success message for local storage
+                document.getElementById('responseMessage').innerHTML += 
+                    `<div class="alert alert-success fade show mt-2">License Key stored successfully in Local Storage.</div>`;
             })
             .catch(error => {
+                // Display error message
                 document.getElementById('responseMessage').innerHTML = 
                     `<div class="alert alert-danger fade show">Error: ${error.message}</div>`;
             });
